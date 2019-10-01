@@ -1,7 +1,8 @@
 package com.redes.lab1.udp;
 
-import java.io.*; 
-import java.net.*; 
+import java.io.IOException;
+import java.net.*;
+import java.time.Duration; 
 
 class UDPServer { 
     public static void main(String args[]) throws Exception 
@@ -33,18 +34,42 @@ class UDPServer {
 		float y = Float.valueOf(entrada[2]);
 		    
 		float resultado = calculadora(entrada[0],x,y); 
-		
+		System.out.println("X: " + x);
+		System.out.println("y: " + y);
 		//sendData = capitalizedSentence.getBytes();
 		
 		sendData = String.valueOf(resultado).getBytes();
 		
-		DatagramPacket sendPacket = 
-		    new DatagramPacket(sendData, sendData.length, IPAddress, 
-				       port); 
+		envia(serverSocket, receiveData, sendData, IPAddress, port); 
 		
-		serverSocket.send(sendPacket); 
+		
 	    } 
     }
+
+	private static void envia(DatagramSocket serverSocket, byte[] receiveData, byte[] sendData, InetAddress IPAddress,
+			int port) throws IOException {
+		try {
+			DatagramPacket receivePacket;
+			DatagramPacket sendPacket = 
+			    new DatagramPacket(sendData, sendData.length, IPAddress, 
+					       port);
+			
+			DatagramSocket serverSocketConfirm = new DatagramSocket(9876); 
+			
+			serverSocketConfirm.setSoTimeout((int) Duration.ofSeconds(2).toMillis());
+			
+			serverSocketConfirm.send(sendPacket); 
+		
+			receivePacket = new DatagramPacket(receiveData, receiveData.length,IPAddress,port);
+			
+			serverSocketConfirm.receive(receivePacket);
+			
+			//String modifiedSentence = new String(receivePacket.getData());
+			
+		}catch (SocketTimeoutException e) {
+			envia(serverSocket, receiveData, sendData, IPAddress, port);
+		}
+	}
     
     private static float calculadora(String operacao, float x, float y) {
 		float resultado = 0;
